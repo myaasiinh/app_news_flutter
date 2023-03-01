@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:app_news/mainMenu.dart';
+import 'package:app_news/register.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -51,34 +52,38 @@ class _LoginState extends State<Login> {
 
   login() async {
 
-    final response = await http.post(Uri.parse("http://192.168.1.3/appnew/login.php"),
-        body: {
-          "email": email,
-          "password": password,
-        }
-    );
+   final response = await http.post(Uri.parse("http://192.168.1.3/appnew/login.php"),
+          body: {
+            "email": email,
+            "password": password,
+          }
+      );
 
-    final data = jsonDecode(response.body);
-    print(data);
+      final data = jsonDecode(response.body);
 
-    int value = data['value'];
-    String message = data['message'];
-    if (value == 1) {
-      setState(() {
-        _loginStatus = LoginStatus.signIn;
-        savePref(value);
-      });
-      print(message);
-    } else {
-      print(message);
-    }
+      int value = data['value'];
+      String message = data['message'];
+      String usernameAPI = data['username'];
+      String emailAPI = data['email'];
+      if (value == 1) {
+        setState(() {
+          _loginStatus = LoginStatus.signIn;
+          savePref(value, usernameAPI, emailAPI);
+        });
+        print(message);
+        getPref();
+      } else {
+        print(message);
+      }
 
   }
 
-  savePref(int value) async {
+  savePref(int value, String username, String email) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
       preferences.setInt('value', value);
+      preferences.setString('username', username);
+      preferences.setString('email', email);
       // ignore: deprecated_member_use
       preferences.commit();
     });
@@ -95,8 +100,18 @@ class _LoginState extends State<Login> {
 
   @override
   void initState() {
+      getPref();
     super.initState();
-    getPref();
+  }
+
+  signOut() async {
+    SharedPreferences preferences = await SharedPreferences.getInstance();
+    setState(() {
+      preferences.setInt('value', 0);
+      // ignore: deprecated_member_use
+      preferences.commit();
+      _loginStatus = LoginStatus.notSignIn;
+    });
   }
 
   @override
@@ -147,13 +162,22 @@ class _LoginState extends State<Login> {
                 },
                 child: Text('Login'),
               ),
+              InkWell(
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => Register()));
+                },
+                child: Text('Create new account', textAlign: TextAlign.center,
+                ),
+              ),
             ],
           ),
         )
     );
+     // ignore: dead_code
      break;
       case LoginStatus.signIn:
-        return MainMenu();  
+        return MainMenu(signOut: signOut,);  
     }
   }
 }
