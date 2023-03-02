@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:app_news/constant/constantFile.dart';
 import 'package:app_news/mainMenu.dart';
 import 'package:app_news/register.dart';
 import 'package:flutter/material.dart';
@@ -52,7 +53,7 @@ class _LoginState extends State<Login> {
   }
 login() async {
   final response = await http.post(
-    Uri.parse("http://192.168.1.3/appnew/login.php"),
+    Uri.parse(BaseUrl.login),
     body: {
       "email": email,
       "password": password,
@@ -64,8 +65,10 @@ login() async {
   int value = data['value'];
   String message = data['message'];
   String usernameAPI = data['username'] ?? '';
-  String emailAPI = data.containsKey('email') ? data['email'] : '';
-  
+  String emailAPI = data['email'] ?? '';
+  String id_users = data['id_users'] ?? '';
+
+
   if (value == 1) {
      Fluttertoast.showToast(
             msg: "Login Successful",
@@ -78,7 +81,7 @@ login() async {
         );
     setState(() {
       _loginStatus = LoginStatus.signIn;
-      savePref(value, usernameAPI, emailAPI);
+      savePref(value, usernameAPI, emailAPI, id_users);
     });
     print(message);
     getPref();
@@ -88,12 +91,13 @@ login() async {
 }
 
 
-  savePref(int value, String username, String email) async {
+  savePref(int value, String username, String email, String id_users) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();
     setState(() {
       preferences.setInt('value', value);
       preferences.setString('username', username);
       preferences.setString('email', email);
+      preferences.setString('id_users', id_users);
       // ignore: deprecated_member_use
       preferences.commit();
     });

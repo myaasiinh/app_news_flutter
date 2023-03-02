@@ -1,4 +1,8 @@
 // ignore: file_names
+import 'package:app_news/viewtabs/category.dart';
+import 'package:app_news/viewtabs/home.dart';
+import 'package:app_news/viewtabs/news.dart';
+import 'package:app_news/viewtabs/profil.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -41,8 +45,10 @@ class _MainMenuState extends State<MainMenu> {
   @override
   Widget build(BuildContext context) {
 
-    return Scaffold(
-
+    
+    return DefaultTabController (
+      length: 4,
+    child: Scaffold(
       appBar: AppBar(
         title: const Text('Main Menu'),
         actions: <Widget>[
@@ -54,11 +60,39 @@ class _MainMenuState extends State<MainMenu> {
           ),
         ],
       ),
-      body: Center(
-        child: Text(
-          "Username: $_username, \n Email: $_email"
-        )
+      body: TabBarView(
+        children: <Widget> [
+          Home(),
+          News(),
+          Category(),
+          Profil(),
+        ] 
+        
+        //Text("Username: $_username, \n Email: $_email")
       ),
+      bottomNavigationBar: TabBar(
+        labelColor: Colors.blue,
+        unselectedLabelColor: Colors.grey,
+        tabs: <Widget> [
+          Tab(
+            icon: Icon(Icons.home),
+            text: 'Home',
+          ),
+          Tab(
+            icon: Icon(Icons.new_releases),
+            text: 'News',
+          ),
+          Tab(
+            icon: Icon(Icons.category),
+            text: 'Category',
+          ),
+          Tab(
+            icon: Icon(Icons.perm_contact_calendar),
+            text: 'Profile',
+          ),
+        ],
+      )
+    )
     );
   }
 }

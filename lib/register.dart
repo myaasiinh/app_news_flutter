@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:app_news/constant/constantFile.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
@@ -37,7 +38,7 @@ class _RegisterState extends State<Register> {
 
   register() async {
 
-     final response = await http.post(Uri.parse("http://192.168.1.3/appnew/register.php"),
+     final response = await http.post(Uri.parse(BaseUrl.register),
           body: {
             "username": username,
             "email": email,
