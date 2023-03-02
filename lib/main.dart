@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:app_news/mainMenu.dart';
 import 'package:app_news/register.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -49,34 +50,43 @@ class _LoginState extends State<Login> {
       //print('email: $email, password: $password');
     }
   }
+login() async {
+  final response = await http.post(
+    Uri.parse("http://192.168.1.3/appnew/login.php"),
+    body: {
+      "email": email,
+      "password": password,
+    },
+  );
 
-  login() async {
+  final data = jsonDecode(response.body);
 
-   final response = await http.post(Uri.parse("http://192.168.1.3/appnew/login.php"),
-          body: {
-            "email": email,
-            "password": password,
-          }
-      );
-
-      final data = jsonDecode(response.body);
-
-      int value = data['value'];
-      String message = data['message'];
-      String usernameAPI = data['username'];
-      String emailAPI = data['email'];
-      if (value == 1) {
-        setState(() {
-          _loginStatus = LoginStatus.signIn;
-          savePref(value, usernameAPI, emailAPI);
-        });
-        print(message);
-        getPref();
-      } else {
-        print(message);
-      }
-
+  int value = data['value'];
+  String message = data['message'];
+  String usernameAPI = data['username'] ?? '';
+  String emailAPI = data.containsKey('email') ? data['email'] : '';
+  
+  if (value == 1) {
+     Fluttertoast.showToast(
+            msg: "Login Successful",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.greenAccent,
+            textColor: Colors.black87,
+            fontSize: 16.0
+        );
+    setState(() {
+      _loginStatus = LoginStatus.signIn;
+      savePref(value, usernameAPI, emailAPI);
+    });
+    print(message);
+    getPref();
+  } else {
+    print(message);
   }
+}
+
 
   savePref(int value, String username, String email) async {
     SharedPreferences preferences = await SharedPreferences.getInstance();

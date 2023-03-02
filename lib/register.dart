@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
 
 class Register extends StatefulWidget {
   const Register({Key? key}) : super(key: key);
@@ -48,8 +49,17 @@ class _RegisterState extends State<Register> {
       int value = data['value'];
       String message = data['message'];
       if (value == 1) {
+        Fluttertoast.showToast(
+            msg: "Registration Successful",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.CENTER,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.greenAccent,
+            textColor: Colors.black87,
+            fontSize: 16.0
+        );
         setState(() {
-        Navigator.pop(context);
+          Navigator.pop(context);
         });
       } else {
         print(message);
