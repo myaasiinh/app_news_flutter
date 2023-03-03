@@ -1,3 +1,4 @@
+import 'package:app_news/viewtabs/addNews.dart';
 import 'package:flutter/material.dart';
 
 class News extends StatefulWidget {
@@ -12,7 +13,11 @@ class _NewsState extends State<News> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) =>  AddNews(),
+          ));
+        },
         child: const Icon(Icons.add),
       ),
       body: Center(
