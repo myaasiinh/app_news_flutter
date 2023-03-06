@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'dart:io';
 import 'package:app_news/constant/constantFile.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,8 @@ import 'package:http/http.dart' as http;
 import 'package:async/async.dart';
 import 'package:path/path.dart' as path;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+
 
 class AddNews extends StatefulWidget {
   @override
@@ -15,61 +18,80 @@ class AddNews extends StatefulWidget {
 
 class _AddNewsState extends State<AddNews> {
 
-  // ignore: avoid_init_to_null
-  File? _imageFile;
-  late String title, content, description, id_users;
+      // ignore: avoid_init_to_null
+    File? _imageFile;
+    late String title, content, description, id_users;
 
-  final _key = GlobalKey<FormState>();
+    final _key = GlobalKey<FormState>();
+    bool isUploading = false;
 
-_pilihGambar() async {
-  var image = await ImagePicker().pickImage(
-    source: ImageSource.gallery, maxWidth: 1000, maxHeight: 1920);
-  setState(() {
-    if (image != null) {
-      _imageFile = File(image.path);
-    } else {
-      print('No image selected.');
-    }
-  });
-}
-
-check() {
-  final form = _key.currentState;
-  if (form!.validate()) {
-    form.save();
-    uploadData();
-  }
-}
-uploadData() async {
-  try {
-    var uri = Uri.parse(BaseUrl.addnews);
-    var request = http.MultipartRequest('POST', uri);
-    if (_imageFile != null) {
-      var stream = http.ByteStream(_imageFile!.openRead());
-      var length = await _imageFile!.length();
-      request.files.add(http.MultipartFile(
-          'image', stream, length,
-          filename: path.basename(_imageFile!.path)));
-    }
-    request.fields['title'] = title;
-    request.fields['content'] = content;
-    request.fields['description'] = description;
-    request.fields['id_users'] = id_users;
-    var response = await request.send();
-    if (response.statusCode == 200) {
-      Fluttertoast.showToast(msg: 'News added successfully!');
-      print('Image Uploaded');
+    _pilihGambar() async {
+      var image = await ImagePicker().pickImage(
+        source: ImageSource.gallery, maxWidth: 1000, maxHeight: 1920);
       setState(() {
-        Navigator.pop(context);
+        if (image != null) {
+          _imageFile = File(image.path);
+        } else {
+          print('No image selected.');
+        }
       });
-    } else {
-      Fluttertoast.showToast(msg: 'Failed to add news');
-      print('Image Failed');
     }
-  } catch (e) {
-    debugPrint('Error $e');
-  }
-}
+
+    check() async {
+      final form = _key.currentState;
+      if (form!.validate()) {
+        form.save();
+        await getPref(); // <-- update the id_users value here
+        uploadData();
+      }
+        }
+    uploadData() async {
+      try {
+        var formData;
+        if (_imageFile != null) {
+          formData = FormData.fromMap({
+            'image': await MultipartFile.fromFile(_imageFile!.path),
+            'title': title,
+            'content': content,
+            'description': description,
+            'id_users': id_users,
+          });
+        } else {
+          formData = FormData.fromMap({
+            'title': title,
+            'content': content,
+            'description': description,
+            'id_users': id_users,
+          });
+        }
+
+        setState(() {
+          isUploading = true;
+        });
+
+        var response = await Dio().post(BaseUrl.addnews, data: formData);
+
+        if (response.statusCode == 200) {
+          Fluttertoast.showToast(msg: 'News added successfully!');
+          print('Image Uploaded');
+          setState(() {
+            isUploading = false;
+            Navigator.pop(context);
+          });
+        } else {
+          Fluttertoast.showToast(msg: 'Failed to add news');
+          print('Image Failed');
+          setState(() {
+            isUploading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error $e');
+        setState(() {
+          isUploading = false;
+        });
+      }
+    }
 
     getPref() async {
       SharedPreferences preferences = await SharedPreferences.getInstance();
@@ -148,19 +170,31 @@ uploadData() async {
                   ),
                 ),
               ),
-            MaterialButton(
-              color: Colors.blue,
-              child: Text(
-                'Submit Add News',
-                style: TextStyle(color: Colors.white),
-              ),
-              onPressed: () {
-                check();
-              },
-            ),
+                                            MaterialButton(
+                  color: Colors.blue,
+                  child: Text(
+                    'Submit Add News',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onPressed: isUploading
+                      ? null
+                      : () {
+                          if (!isUploading) {
+                            isUploading = true;
+                            setState(() {}); // to re-build the UI and disable the button
+                            check();
+                          }
+                        },
+                  disabledColor: Colors.grey,
+                  disabledTextColor: Colors.white,
+                  disabledElevation: 0,
+                )
+
+              // to disable the button while uploading
           ],
         ),
       )
     );
   }
 }
+
